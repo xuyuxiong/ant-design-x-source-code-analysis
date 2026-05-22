@@ -5,6 +5,9 @@ hero:
   name: Ant Design X 源码深度解析
   text: 面向 AI 应用的 UI 组件库源码学习指南
   tagline: 从设计原理到实现细节，全面掌握 Ant Design X 核心机制
+  image:
+    src: /ant-design-x-logo.svg
+    alt: Ant Design X Logo
   actions:
     - theme: alt
       text: GitHub
@@ -104,32 +107,5 @@ features:
   border-radius: 8px;
   padding: 24px;
   margin: 24px 0;
-}
-
-.action-buttons {
-  margin-top: 32px;
-  padding-top: 32px;
-  border-top: 1px solid var(--vp-c-divider);
-}
-
-.btn-get-started {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  color: var(--vp-c-brand);
-  font-size: 16px;
-  font-weight: 500;
-  text-decoration: none;
-  padding: 10px 16px;
-  border: 2px solid var(--vp-c-brand);
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.btn-get-started:hover {
-  background: var(--vp-c-brand);
-  color: #fff;
-  transform: translateX(4px);
 }
 </style>
