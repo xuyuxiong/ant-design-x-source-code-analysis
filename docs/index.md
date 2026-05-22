@@ -5,13 +5,7 @@ hero:
   name: Ant Design X 源码深度解析
   text: 面向 AI 应用的 UI 组件库源码学习指南
   tagline: 从设计原理到实现细节，全面掌握 Ant Design X 核心机制
-  image:
-    src: /ant-design-x-logo.svg
-    alt: Ant Design X Logo
   actions:
-    - theme: brand
-      text: 开始学习
-      link: /guide/overview
     - theme: alt
       text: GitHub
       link: https://github.com/xuyuxiong/ant-design-x-source-code-analysis
@@ -103,10 +97,6 @@ features:
 - 📊 **图解更多**：大量可视化架构图和组件树图
 - ⚙️ **深度解析**：详细解析状态管理、主题系统等核心设计
 - 📱 **现代化体验**：响应式设计、暗色模式、代码高亮
-
-<div class="action-buttons">
-  <a href="/ant-design-x-source-code-analysis/guide/overview.html" class="btn-get-started">→ 开始学习</a>
-</div>
 
 <style>
 .why-learn {
