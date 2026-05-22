@@ -35,7 +35,7 @@ cd packages/x
 pnpm start
 ```
 
-访问 http://localhost:8000 查看文档和组件演示。
+访问 `http://localhost:8000` 查看文档和组件演示。
 
 ### 启动其他包
 
