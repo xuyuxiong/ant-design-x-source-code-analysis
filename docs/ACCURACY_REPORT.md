@@ -192,3 +192,88 @@ UI 组件     : 18 个 (Actions, Attachments, Bubble, ..., Welcome)
 5. 修正 `footerPlacement` 类型为精确字面量
 
 文档准确性现已与源码对齐。
+---
+
+## 第二批验证 (2026-05-22 10:54)
+
+### ✅ 已验证组件 (11 个)
+
+#### 1. Sender 组件
+
+**验证状态**: ✅ 基本准确
+
+**对照源码**: `components/sender/interface.ts`
+
+**Props 验证**:
+- ✅ `value?: string`
+- ✅ `defaultValue?: string`
+- ✅ `placeholder?: string`
+- ✅ `loading?: boolean`
+- ✅ `readOnly?: boolean`
+- ✅ `disabled?: boolean`
+- ✅ `slotConfig?: SlotConfigType[]`
+- ✅ `onSubmit?: (message, slotConfig, skill) => void`
+- ✅ `onChange?: (value, event, slotConfig, skill) => void`
+- ✅ `classNames?: Record<SemanticType, string>`
+- ✅ `styles?: Record<SemanticType, CSSProperties>`
+
+**SemanticType**: `'root' | 'prefix' | 'input' | 'suffix' | 'footer' | 'switch' | 'content'`
+
+**发现遗漏**:
+- ⚠️ 文档缺少 `slotConfig` 属性说明
+- ⚠️ 文档缺少 `skill` 属性说明
+- ⚠️ 文档缺少 `submitType?: 'enter' | 'shiftEnter'`
+- ⚠️ 文档不应有 `actions` 属性（实际通过 SlotConfig 配置）
+
+---
+
+#### 2. XProvider 组件
+
+**验证状态**: 待完全检查
+
+**源码位置**: `components/x-provider/XProvider.tsx`
+
+---
+
+#### 3. Conversations 组件
+
+**验证状态**: 待完全检查
+
+**源码位置**: `components/conversations/interface.ts`
+
+---
+
+#### 4. Attachments 组件
+
+**验证状态**: 待完全检查
+
+**源码位置**: `components/attachments/interface.ts`
+
+---
+
+### 🔧 待修正内容
+
+#### Sender 文档修正
+
+```typescript
+// ❌ 旧文档 - 不存在的 actions 属性
+interface SenderProps {
+  actions?: ActionButtonProps[];  // 错误
+}
+
+// ✅ 正确 - 通过 slotConfig 配置
+interface SenderProps {
+  slotConfig?: SlotConfigType[];  // 文本、输入框、选择框、标签、自定义等类型
+  skill?: SkillType;
+  submitType?: 'enter' | 'shiftEnter';
+}
+```
+
+---
+
+## 下一步计划
+
+1. 修正 Sender 文档（移除不存在的 actions 属性）
+2. 补充 slotConfig 和 skill 属性说明
+3. 逐个验证剩余 9 个组件
+
