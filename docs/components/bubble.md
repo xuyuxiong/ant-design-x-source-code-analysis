@@ -1,61 +1,291 @@
 # Bubble 气泡对话
 
-Bubble 是 Ant Design X 的核心组件，用于展示单条对话消息。
+> Ant Design X 的核心对话组件，用于展示单条 AI/用户消息
 
-## 源码目录结构
+**源码位置**: `packages/x/components/bubble/`
+
+**文件数**: 约 18 个文件（含测试和示例）
+
+## 📁 源码目录结构
 
 ```
 components/bubble/
-├── Bubble.tsx              # 主组件逻辑
-├── BubbleList.tsx          # 列表组件
-├── TypingContent.tsx       # 打字机效果
+├── Bubble.tsx              # 主组件实现
+├── BubbleList.tsx          # 列表容器组件
+├── Divider.tsx             # 分隔线组件
 ├── EditableContent.tsx     # 可编辑内容
-├── Loading.tsx             # 加载状态
-├── Divider.tsx             # 分隔线
-├── System.tsx              # 系统消息
+├── TypingContent.tsx       # 打字机效果内容
+├── System.tsx              # 系统消息组件
+├── loading.tsx             # 加载状态
 ├── context.ts              # Context 定义
-├── interface.ts            # 类型定义
+├── interface.ts            # 类型定义（核心）
+├── index.tsx               # 导出入口
 ├── hooks/                  # 自定义 Hooks
-│   ├── useTypingConfig.ts
-│   └── useEditable.ts
+│   ├── useTypingConfig.ts  # 打字机配置
+│   └── useEditable.ts      # 可编辑逻辑
 ├── style/                  # 样式文件
 │   ├── index.tsx           # 样式注册
-│   └── content.tsx         # 内容样式
-├── demo/                   # 演示示例
-│   ├── basic.tsx
-│   ├── typing.tsx
-│   ├── loading.tsx
+│   ├── content.tsx         # 内容样式
 │   └── ...
-└── index.tsx               # 导出入口
+└── demo/                   # 演示示例
+    ├── basic.tsx
+    ├── typing.tsx
+    ├── loading.tsx
+    └── ...
 ```
 
-## 核心功能
+## 🔑 核心接口
 
-### 1. 基础展示
+**源文件**: `components/bubble/interface.ts`
 
-展示 AI 或用户的对话消息。
+### BubbleProps
+
+```typescript
+interface BubbleProps<ContentType extends BubbleContentType = string>
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'content'> {
+  
+  // ========== 基础属性 ==========
+  
+  /**
+   * 类名前缀
+   */
+  prefixCls?: string;
+  
+  /**
+   * 气泡内容（支持 ReactNode 或任意对象）
+   */
+  content: ContentType;  // ContentType = ReactNode | AnyObject
+  
+  /**
+   * 对齐位置
+   */
+  placement?: 'start' | 'end';
+  
+  /**
+   * 变体样式
+   * @default 'filled'
+   */
+  variant?: 'filled' | 'outlined' | 'shadow' | 'borderless';
+  
+  /**
+   * 气泡形状
+   * @default 'default'
+   */
+  shape?: 'default' | 'round' | 'corner';
+  
+  // ========== 状态属性 ==========
+  
+  /**
+   * 加载状态
+   * @default false
+   */
+  loading?: boolean;
+  
+  /**
+   * 自定义加载渲染
+   */
+  loadingRender?: () => React.ReactNode;
+  
+  /**
+   * 是否流式传输内容
+   * @default false
+   */
+  streaming?: boolean;
+  
+  // ========== 动画属性 ==========
+  
+  /**
+   * 打字机/动画配置（仅在 content 为 string 时生效）
+   */
+  typing?: boolean | BubbleAnimationOption | ((content, info) => ...);
+  
+  /**
+   * 动画回调
+   */
+  onTyping?: (rendererContent: string, currentContent: string) => void;
+  onTypingComplete?: (content: string) => void;
+  
+  // ========== 可编辑属性 ==========
+  
+  /**
+   * 是否可编辑
+   */
+  editable?: boolean | EditableBubbleOption;
+  
+  /**
+   * 编辑回调
+   */
+  onEditConfirm?: (content: string) => void;
+  onEditCancel?: () => void;
+  
+  // ========== 插槽属性 ==========
+  
+  /**
+   * 头部插槽
+   */
+  header?: BubbleSlot<ContentType>;
+  
+  /**
+   * 底部插槽
+   */
+  footer?: BubbleSlot<ContentType>;
+  
+  /**
+   * 头像插槽
+   */
+  avatar?: BubbleSlot<ContentType>;
+  
+  /**
+   * 额外内容插槽
+   */
+  extra?: BubbleSlot<ContentType>;
+  
+  /**
+   * 底部插槽渲染位置
+   */
+  footerPlacement?: 'outer-start' | 'outer-end' | 'inner-start' | 'inner-end';
+  
+  /**
+   * 自定义内容渲染
+   */
+  contentRender?: (content: ContentType, info: Info) => React.ReactNode;
+  
+  // ========== 样式属性 ==========
+  
+  /**
+   * 自定义样式映射
+   */
+  styles?: Partial<Record<SemanticType, React.CSSProperties>>;
+  
+  /**
+   * 自定义类名映射
+   */
+  classNames?: Partial<Record<SemanticType, string>>;
+  
+  /**
+   * 根元素类名
+   */
+  rootClassName?: string;
+}
+```
+
+### BubbleAnimationOption
+
+```typescript
+interface BubbleAnimationOption {
+  /**
+   * 动画效果类型
+   * @default 'fade-in'
+   */
+  effect?: 'typing' | 'fade-in';
+  
+  /**
+   * 内容步进单位（数组格式为随机区间 [min, max]）
+   * @default 6
+   */
+  step?: number | [number, number];
+  
+  /**
+   * 动画触发间隔 (ms)
+   * @default 100
+   */
+  interval?: number;
+  
+  /**
+   * 重新开始动画时是否保留文本公共前缀
+   * @default true
+   */
+  keepPrefix?: boolean;
+}
+```
+
+### EditableBubbleOption
+
+```typescript
+interface EditableBubbleOption {
+  /**
+   * 是否处于编辑状态
+   */
+  editing?: boolean;
+  
+  /**
+   * 确认按钮文本
+   */
+  okText?: React.ReactNode;
+  
+  /**
+   * 取消按钮文本
+   */
+  cancelText?: React.ReactNode;
+}
+```
+
+### 类型定义
+
+```typescript
+// 内容类型
+type BubbleContentType = React.ReactNode | AnyObject;
+
+// 插槽类型
+type BubbleSlot<ContentType> =
+  | React.ReactNode
+  | ((content: ContentType, info: Info) => React.ReactNode);
+
+// 语义化类型
+type SemanticType =
+  | 'root'
+  | 'content'
+  | 'body'
+  | 'header'
+  | 'footer'
+  | 'avatar'
+  | 'extra';
+
+// 消息状态
+enum MessageStatus {
+  local = 'local',
+  loading = 'loading',
+  updating = 'updating',
+  success = 'success',
+  error = 'error',
+  abort = 'abort',
+}
+
+// Info 接口
+type Info = {
+  status?: `${MessageStatus}`;
+  key?: string | number;
+  extraInfo?: AnyObject;
+};
+```
+
+## 📝 使用示例
+
+### 示例 1: 基础用法
 
 ```tsx
 import { Bubble } from '@ant-design/x';
 
-// 基础用法
+// 基础展示
 <Bubble content="你好，有什么可以帮你的？" />
 
-// 指定角色
-<Bubble role="ai" content="我是 AI 助手" />
-<Bubble role="user" content="我想了解..." />
+// 指定对齐位置
+<Bubble placement="start" content="AI 消息（左侧）" />
+<Bubble placement="end" content="用户消息（右侧）" />
 ```
 
-### 2. 打字机效果
+> ⚠️ **注意**: Bubble 组件**没有** `role` 属性，通过 `placement` 区分 AI/用户消息。
 
-支持流式打字机效果。
+### 示例 2: 打字机效果
 
 ```tsx
 <Bubble
-  content="这是打字机效果..."
+  content="这是打字机效果，文字会逐字显示..."
   typing={{
-    step: 1,           // 每次显示的字符数
-    interval: 50,      // 间隔时间 (ms)
+    effect: 'typing',      // 打字机效果
+    step: 1,               // 每次显示 1 个字符
+    interval: 50,          // 间隔 50ms
+    keepPrefix: true,      // 保持公共前缀
   }}
   onTypingComplete={(content) => {
     console.log('打字完成:', content);
@@ -63,38 +293,64 @@ import { Bubble } from '@ant-design/x';
 />
 ```
 
-### 3. 流式输出
-
-支持服务端流式数据。
+### 示例 3: 流式输出
 
 ```tsx
-<Bubble
-  content={streamingContent}
-  streaming={isStreaming}  // 是否流式传输中
-  typing={isStreaming}     // 流式时启用打字机
-/>
+import { Bubble } from '@ant-design/x';
+import { useState, useEffect } from 'react';
+
+function StreamingExample() {
+  const [content, setContent] = useState('');
+  const [streaming, setStreaming] = useState(true);
+  
+  // 模拟流式接收
+  useEffect(() => {
+    const fullContent = '这是一段很长的流式回答...';
+    let index = 0;
+    
+    const timer = setInterval(() => {
+      if (index < fullContent.length) {
+        setContent(fullContent.slice(0, index + 1));
+        index++;
+      } else {
+        setStreaming(false);
+        clearInterval(timer);
+      }
+    }, 50);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  return (
+    <Bubble
+      content={content}
+      streaming={streaming}
+      typing={streaming}  // 流式时启用打字机
+      variant="filled"
+    />
+  );
+}
 ```
 
-### 4. 加载状态
-
-显示加载指示器。
+### 示例 4: 加载状态
 
 ```tsx
-<Bubble
-  loading
-  content="思考中..."
-/>
+// 基础加载
+<Bubble loading content="思考中..." />
 
 // 自定义加载渲染
 <Bubble
   loading
-  loadingRender={() => <CustomLoading />}
+  loadingRender={() => (
+    <div className="custom-loading">
+      <Spin />
+      <span>AI 正在思考...</span>
+    </div>
+  )}
 />
 ```
 
-### 5. 可编辑内容
-
-支持消息内容编辑。
+### 示例 5: 可编辑内容
 
 ```tsx
 <Bubble
@@ -106,6 +362,7 @@ import { Bubble } from '@ant-design/x';
   }}
   onEditConfirm={(newContent) => {
     setContent(newContent);
+    setEditing(false);
   }}
   onEditCancel={() => {
     setEditing(false);
@@ -113,408 +370,122 @@ import { Bubble } from '@ant-design/x';
 />
 ```
 
-## Props 详解
+### 示例 6: 完整插槽
+
+```tsx
+<Bubble
+  placement="start"
+  content="这是一条消息"
+  variant="outlined"
+  shape="round"
+  header={<div>发送者名称</div>}
+  avatar={<Avatar src="/avatar.png" />}
+  footer={<div>消息时间戳</div>}
+  extra={<Button>操作</Button>}
+/>
+```
+
+### 示例 7: 样式定制
+
+```tsx
+<Bubble
+  content="自定义样式"
+  styles={{
+    root: { maxWidth: 500 },
+    content: { backgroundColor: '#e6f4ff' },
+    avatar: { border: '2px solid #1677ff' },
+  }}
+  classNames={{
+    body: 'custom-body-class',
+  }}
+/>
+```
+
+## ⚙️ Props 详解
 
 ### 基础属性
 
 | 属性 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
-| content | `ReactNode` | - | 气泡内容 |
-| role | `'ai' \| 'user' \| 'system'` | - | 角色类型 |
-| placement | `'start' \| 'end'` | `'start'` | 对齐位置 |
-| variant | `'filled' \| 'borderless' \| 'outlined'` | `'filled'` | 变体样式 |
-| shape | `'default' \| 'round'` | `'default'` | 气泡形状 |
-| loading | `boolean` | `false` | 加载状态 |
-| streaming | `boolean` | `false` | 是否流式传输 |
+| content | `ReactNode \| AnyObject` | - | 气泡内容 |
+| placement | `'start' \| 'end'` | - | 对齐位置 |
+| variant | `'filled' \| 'outlined' \| 'shadow' \| 'borderless'` | `'filled'` | 变体样式 |
+| shape | `'default' \| 'round' \| 'corner'` | `'default'` | 气泡形状 |
 
-### 内容相关
-
-| 属性 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| typing | `boolean \| TypingConfig` | `false` | 打字机效果 |
-| typingFast | `boolean` | `false` | 快速打字模式 |
-| contentRender | `(content, info) => ReactNode` | - | 自定义内容渲染 |
-
-#### TypingConfig
-
-```ts
-interface TypingConfig {
-  step?: number;           // 每次步进字符数
-  interval?: number;       // 步进间隔 (ms)
-  suffix?: string;         // 后缀字符
-}
-```
-
-### 可编辑
-
-| 属性 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| editable | `boolean \| EditableConfig` | `false` | 是否可编辑 |
-| onEditConfirm | `(content) => void` | - | 编辑确认回调 |
-| onEditCancel | `() => void` | - | 编辑取消回调 |
-
-#### EditableConfig
-
-```ts
-interface EditableConfig {
-  editing?: boolean;
-  okText?: string;
-  cancelText?: string;
-}
-```
-
-### 加载相关
+### 状态属性
 
 | 属性 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
 | loading | `boolean` | `false` | 加载状态 |
 | loadingRender | `() => ReactNode` | - | 自定义加载渲染 |
+| streaming | `boolean` | `false` | 是否流式传输 |
 
-### 布局相关
+### 动画属性
 
 | 属性 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
-| placement | `'start' \| 'end'` | `'start'` | 内容对齐位置 |
-| footerPlacement | `string` | - | 底部内容位置 |
-| avatar | `ReactNode` | - | 头像 |
-| header | `ReactNode` | - | 头部内容 |
-| footer | `ReactNode` | - | 底部内容 |
-| extra | `ReactNode` | - | 额外内容 |
-| contentRender | `function` | - | 内容渲染器 |
+| typing | `boolean \| BubbleAnimationOption \| function` | - | 打字机动画 |
+| onTyping | `(renderer, current) => void` | - | 打字过程回调 |
+| onTypingComplete | `(content) => void` | - | 打字完成回调 |
 
-### 回调函数
+### 可编辑属性
+
+| 属性 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| editable | `boolean \| EditableBubbleOption` | `false` | 是否可编辑 |
+| onEditConfirm | `(content) => void` | - | 编辑确认回调 |
+| onEditCancel | `() => void` | - | 编辑取消回调 |
+
+### 插槽属性
 
 | 属性 | 类型 | 描述 |
 |------|------|--------|
-| onTyping | `(content: string) => void` | 打字过程中回调 |
-| onTypingComplete | `(content: string) => void` | 打字完成回调 |
-| onEditConfirm | `(content: string) => void` | 编辑确认回调 |
-| onEditCancel | `() => void` | 编辑取消回调 |
+| header | `BubbleSlot` | 头部插槽 |
+| footer | `BubbleSlot` | 底部插槽 |
+| avatar | `BubbleSlot` | 头像插槽 |
+| extra | `BubbleSlot` | 额外内容插槽 |
+| footerPlacement | `'outer-start' \| 'outer-end' \| 'inner-start' \| 'inner-end'` | 底部插槽位置 |
+| contentRender | `function` | 自定义内容渲染 |
 
-### 样式相关
+### 样式属性
 
 | 属性 | 类型 | 描述 |
 |------|------|--------|
 | prefixCls | `string` | 类名前缀 |
-| className | `string` | 自定义类名 |
-| style | `CSSProperties` | 自定义样式 |
-| classNames | `Record<string, string>` | 自定义类名映射 |
-| styles | `Record<string, CSSProperties>` | 自定义样式映射 |
+| rootClassName | `string` | 根元素类名 |
+| styles | `Record<SemanticType, CSSProperties>` | 自定义样式映射 |
+| classNames | `Record<SemanticType, string>` | 自定义类名映射 |
 
-#### Slot 类型
+## 💡 最佳实践
 
-```ts
-interface BubbleSlots {
-  root?: string;
-  avatar?: string;
-  header?: string;
-  body?: string;
-  content?: string;
-  footer?: string;
-  extra?: string;
-}
-```
-
-## 使用场景
-
-### 1. 简单对话
+### ✅ 推荐
 
 ```tsx
-<Bubble
-  role="ai"
-  avatar={<Avatar src="/avatar.png" />}
-  content="你好！有什么可以帮你的吗？"
-/>
+// 1. 使用 placement 区分 AI/用户消息
+<Bubble placement="start" content="AI 消息" />
+<Bubble placement="end" content="用户消息" />
+
+// 2. 流式场景启用 typing
+<Bubble content={streamingContent} typing={isStreaming} />
+
+// 3. 使用 variant 区分视觉层次
+<Bubble variant="filled" content="普通消息" />
+<Bubble variant="outlined" content="强调消息" />
 ```
 
-### 2. 流式回答
+### ❌ 不推荐
 
 ```tsx
-const [content, setContent] = useState('');
-const [streaming, setStreaming] = useState(true);
+// 1. 不要使用不存在的 role 属性
+<Bubble role="ai" /> // ❌ 错误
 
-// 模拟流式接收
-useEffect(() => {
-  const fullContent = '这是一段很长的回答...';
-  let index = 0;
-  
-  const timer = setInterval(() => {
-    if (index < fullContent.length) {
-      setContent(fullContent.slice(0, index + 1));
-      index++;
-    } else {
-      setStreaming(false);
-      clearInterval(timer);
-    }
-  }, 50);
-  
-  return () => clearInterval(timer);
-}, []);
+// 2. 避免过快的打字速度
+<Bubble typing={{ interval: 5 }} /> // ❌ 太快，用户看不清
 
-return (
-  <Bubble
-    content={content}
-    streaming={streaming}
-    typing={streaming}
-  />
-);
+// 3. 避免 content 类型不一致
+<Bubble content={null} /> // ❌ 可能报错
 ```
 
-### 3. 思考中的 AI
+---
 
-```tsx
-<Bubble
-  loading
-  loadingRender={() => (
-    <div>
-      <Spin />
-      <span>正在思考...</span>
-    </div>
-  )}
-/>
-```
-
-### 4. 带操作的对话
-
-```tsx
-<Bubble
-  content={content}
-  footer={
-    <div>
-      <Button icon={<CopyOutlined />} onClick={handleCopy} />
-      <Button icon={<LikeOutlined />} onClick={handleLike} />
-      <Button icon={<DislikeOutlined />} onClick={handleDislike} />
-    </div>
-  }
-/>
-```
-
-### 5. 可编辑回复
-
-```tsx
-const [editing, setEditing] = useState(false);
-
-<Bubble
-  content={userContent}
-  role="user"
-  editable={{ editing }}
-  onEditConfirm={(newContent) => {
-    setUserContent(newContent);
-    setEditing(false);
-  }}
-  onEditCancel={() => setEditing(false)}
-  extra={
-    <Button
-      size="small"
-      onClick={() => setEditing(true)}
-    >
-      编辑
-    </Button>
-  }
-/>
-```
-
-### 6. 系统消息
-
-```tsx
-import { Bubble } from '@ant-design/x';
-
-<Bubble.System content="系统消息：对话已开始" />
-```
-
-## 样式定制
-
-### 使用 CSS-in-JS
-
-```tsx
-<Bubble
-  content="Hello"
-  classNames={{
-    content: 'custom-content',
-  }}
-  styles={{
-    content: {
-      backgroundColor: '#e6f4ff',
-      fontSize: 16,
-    },
-  }}
-/>
-```
-
-### 使用主题配置
-
-```tsx
-<ConfigProvider
-  theme={{
-    components: {
-      Bubble: {
-        colorBgContainer: '#f5f5f5',
-        borderRadiusLG: 12,
-        padding: 12,
-      },
-    },
-  }}
->
-  <Bubble content="Custom themed bubble" />
-</ConfigProvider>
-```
-
-## Hooks
-
-### 源码中使用的 Hooks
-
-```tsx
-// useXComponentConfig - 组件配置 Hook
-const contextConfig = useXComponentConfig('bubble');
-
-// useBubbleStyle - 样式注册 Hook
-const [hashId, cssVarCls] = useBubbleStyle(prefixCls);
-
-// useXProviderContext - 全局配置上下文
-const { direction, getPrefixCls } = useXProviderContext();
-```
-
-## 性能优化
-
-### 1. 使用 useMemo 缓存内容
-
-```tsx
-const memoedContent = useMemo(
-  () => contentRender ? contentRender(content) : content,
-  [content, contentRender]
-);
-```
-
-### 2. 避免不必要的重新渲染
-
-```tsx
-// ✅ 好的做法
-const BubbleItem = React.memo(({ bubble }) => {
-  return <Bubble {...bubble} />;
-});
-
-// ❌ 不好的做法
-const BubbleItem = ({ bubble }) => {
-  return <Bubble {...bubble} />;
-};
-```
-
-### 3. 虚拟滚动（大列表）
-
-```tsx
-<Bubble.List
-  items={messages}
-  virtual
-  height={600}
-  itemKey="id"
-/>
-```
-
-## Buble.List 复合组件
-
-Bubble 组件提供 List 子组件用于对话列表。
-
-```tsx
-import { Bubble } from '@ant-design/x';
-
-const messages = [
-  { key: '1', role: 'ai', content: '你好' },
-  { key: '2', role: 'user', content: '你好' },
-];
-
-<Bubble.List
-  items={messages}
-  autoScroll={false}
-/>;
-```
-
-### List Props
-
-| 属性 | 类型 | 描述 |
-|------|------|--------|
-| items | `BubbleItemType[]` | 气泡列表数据 |
-| virtual | `boolean` | 是否虚拟滚动 |
-| height | `number` | 容器高度 |
-| itemKey | `string` | 数据项的键名 |
-| autoScroll | `boolean` | 是否自动滚动 |
-| renderProps | `function` | 自定义渲染属性 |
-
-## 最佳实践
-
-### 1. 合理使用加载状态
-
-```tsx
-// ✅ 思考中显示加载
-{loading && <Bubble loading content="正在思考..." />}
-
-// ❌ 不要用文字代替加载状态
-{loading && <Bubble content="思考中..." />}
-```
-
-### 2. 流式传输优化
-
-```tsx
-// ✅ 流式时禁用 complex 渲染
-<Bubble
-  content={streamingContent}
-  streaming={isStreaming}
-  typing={isStreaming && typeof streamingContent === 'string'}
-/>
-```
-
-### 3. 错误处理
-
-```tsx
-<Bubble
-  type={error ? 'error' : undefined}
-  content={error ? '出错了，请重试' : content}
-/>
-```
-
-## 常见问题
-
-### Q: 如何实现多行代码展示？
-
-```tsx
-<Bubble
-  content={
-    <pre>
-      <code>{code}</code>
-    </pre>
-  }
-/>
-```
-
-### Q: 如何自定义头像？
-
-```tsx
-<Bubble
-  avatar={
-    <Avatar
-      src="/avatar.png"
-      shape="circle"
-      size={40}
-    />
-  }
-/>
-```
-
-### Q: 如何显示时间戳？
-
-```tsx
-<Bubble
-  content={message}
-  footer={
-    <Text type="secondary">
-      {dayjs(timestamp).format('HH:mm')}
-    </Text>
-  }
-/>
-```
-
-## 相关组件
-
-- [Conversations](/components/conversations) - 对话列表容器
-- [Sender](/components/sender) - 输入框组件
-- [ThoughtChain](/components/thought-chain) - 思考链组件
-- [XProvider](/components/x-provider) - 全局配置
+**源码参考**: `packages/x/components/bubble/`
